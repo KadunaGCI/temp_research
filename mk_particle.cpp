@@ -126,6 +126,58 @@ void mk_vtu() {
 	printf("done.\n");
 }
 
+
+double findMinX_in_SURFACEWALL() {
+	double res = 100.0;
+	for (int iz = 0; iz < nz; iz++) {
+		for (int iy = 0; iy < ny; iy++) {
+			for (int ix = 0; ix < nx; ix++) {
+				int ip = iz*nxy + iy*nx + ix;
+				if (ParticleType[ip] == WALL && Position[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && Position[ip * 3 + 2] > mk_MIN_Z && Position[ip * 3] < res){
+					res = Position[ip * 3];
+				}
+			}
+		}
+	}
+	return res;
+}
+
+void mk_SURFACEWALL() {
+	double min = findMinX_in_SURFACEWALL();
+	for (int iz = 0; iz < nz; iz++) {
+		for (int iy = 0; iy < ny; iy++) {
+			for (int ix = 0; ix < nx; ix++) {
+				int ip = iz*nxy + iy*nx + ix;
+				if (ParticleType[ip] == WALL && Position[ip * 3] == min && Position[ip * 3 + 2] > mk_MIN_Z) {
+					ParticleType[ip] = SURFACEWALL;
+				}
+			}
+		}
+	}
+	min = findMinX_in_SURFACEWALL();
+	for (int iz = 0; iz < nz; iz++) {
+		for (int iy = 0; iy < ny; iy++) {
+			for (int ix = 0; ix < nx; ix++) {
+				int ip = iz*nxy + iy*nx + ix;
+				if (ParticleType[ip] == WALL && Position[ip * 3] == min && Position[ip * 3 + 2] > mk_MIN_Z) {
+					ParticleType[ip] = SURFACEWALL;
+				}
+			}
+		}
+	}
+	min = findMinX_in_SURFACEWALL();
+	for (int iz = 0; iz < nz; iz++) {
+		for (int iy = 0; iy < ny; iy++) {
+			for (int ix = 0; ix < nx; ix++) {
+				int ip = iz*nxy + iy*nx + ix;
+				if (ParticleType[ip] == WALL && Position[ip * 3] == min && Position[ip * 3 + 2] > mk_MIN_Z) {
+					ParticleType[ip] = SURFACEWALL;
+				}
+			}
+		}
+	}
+}
+
 // argcは引数の総個数(プログラム名も含む)(渡す必要なし)
 int main(int argc, char** argv) {
 
@@ -156,6 +208,10 @@ int main(int argc, char** argv) {
 		printf("%s", "error in args");
 		getchar();
 		return 1;
+		fileNumber = "1";
+		WAVE_HEIGHT = 1.8;
+		WAVE_SPEED = 1.0;
+		DNS_RIGID0 = 700;
 	}
 
 	printf("start mk_particle\n");
@@ -208,6 +264,8 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	mk_SURFACEWALL();
+
 	printf("NumberOfParticle:     %d\n", NumberOfParticle);
 	fopen_s(&fp, OUTPUT_FILE, "w");
 	fprintf(fp, "%d %d\n", NumberOfParticle, nr0);
@@ -244,5 +302,6 @@ int main(int argc, char** argv) {
 	free(pressave_vtu);
 	free(ParticleType);
 
+	getchar();
 	return 0;
 }

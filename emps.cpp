@@ -69,17 +69,16 @@ int *ParticleType;
 void ChkPcl(int i) {
 	// just correct y-axis
 	if (Pos[i * 3 + 1] > MAX_Y) {
-		while (Pos[i * 3 + 1] - MAX_Y > 0) {
-			Pos[i * 3 + 1] -= MAX_Y;
-		}
+		do {
+			Pos[i * 3 + 1] -= CORRECTION;
+		} while (Pos[i * 3 + 1] > MAX_Y);
 	}
 	else if (Pos[i * 3 + 1] < MIN_Y) {
-		while (Pos[i * 3 + 1] + MAX_Y < 0) {
-			Pos[i * 3 + 1] += MAX_Y;
-		}
+		do {
+			Pos[i * 3 + 1] += CORRECTION;
+		} while (Pos[i * 3 + 1] < MIN_Y);
 	}
 	if (Pos[i * 3] > MAX_X || Pos[i * 3]<MIN_X ||
-		Pos[i * 3 + 1]>MAX_Y || Pos[i * 3 + 1]<MIN_Y ||
 		Pos[i * 3 + 2]>MAX_Z || Pos[i * 3 + 2] < MIN_Z)
 	{
 		Typ[i] = GHOST;
@@ -280,13 +279,37 @@ void MkBkt(void) {
 	}
 }
 
-/*対応するバケットを返す。ないときは-1*/
-int isPBBuket(int buk_num) {
+/*対応するバケット配列を返す。ないときは-1の配列*/
+void mk_PBBuket(int buk_num, int oppBuket[9]) {
 	// y軸負側
-	if (buk_num%nBxy < nBx) return (buk_num%nBxy + nBx*(nBy - 1));
+	if (nBx <= buk_num%nBxy && buk_num%nBxy < 2 * nBx) {
+		int oppCenter = buk_num%nBxy + nBx*(nBy - 3);
+		oppBuket[0] = oppCenter - nBxy - 1;
+		oppBuket[1] = oppCenter - nBxy;
+		oppBuket[2] = oppCenter - nBxy + 1;
+		oppBuket[3] = oppCenter - 1;
+		oppBuket[4] = oppCenter;
+		oppBuket[5] = oppCenter + 1;
+		oppBuket[6] = oppCenter + nBxy - 1;
+		oppBuket[7] = oppCenter + nBxy;
+		oppBuket[8] = oppCenter + nBxy + 1;
+	}
 	// y軸正側
-	else if (buk_num%nBxy + nBx >= nBxy) return (buk_num%nBxy - nBx*(nBy - 1));
-	else return -1;
+	else if (buk_num%nBxy + nBx >= nBxy) {
+		int oppCenter = buk_num%nBxy - nBx*(nBy - 3);
+		oppBuket[0] = oppCenter - nBxy - 1;
+		oppBuket[1] = oppCenter - nBxy;
+		oppBuket[2] = oppCenter - nBxy + 1;
+		oppBuket[3] = oppCenter - 1;
+		oppBuket[4] = oppCenter;
+		oppBuket[5] = oppCenter + 1;
+		oppBuket[6] = oppCenter + nBxy - 1;
+		oppBuket[7] = oppCenter + nBxy;
+		oppBuket[8] = oppCenter + nBxy + 1;
+	}
+	else {
+		for (int i = 0; i < 9; i++) { oppBuket[i] = -1; }
+	}
 }
 
 double correctY(double y) {
@@ -330,24 +353,28 @@ void VscTrm() {
 					}
 				}
 			}
-			if (isPBBuket(iz*nBxy + iy*nBx + ix) > 0) {
-				int j = isPBBuket(iz*nBxy + iy*nBx + ix);
-				for (;;) {
-					double v0 = Pos[j * 3] - pos_ix;
-					double v1 = correctY(Pos[j * 3 + 1] - pos_iy);
-					double v2 = Pos[j * 3 + 2] - pos_iz;
-					double dist2 = v0*v0 + v1*v1 + v2*v2;
-					if (dist2 < r2) {
-						if (j != i && Typ[j] != GHOST) {
-							double dist = sqrt(dist2);
-							double w = WEI(dist, r);
-							Acc_x += (Vel[j * 3] - vec_ix)*w;
-							Acc_y += (Vel[j * 3 + 1] - vec_iy)*w;
-							Acc_z += (Vel[j * 3 + 2] - vec_iz)*w;
+			int PBBuket[9];
+			mk_PBBuket(iz*nBxy + iy*nBx + ix, PBBuket);
+			if (PBBuket[0] > 0) {
+				for (int k = 0; k < 9; k++) {
+					int j = bfst[PBBuket[k]];
+					for (;;) {
+						double v0 = Pos[j * 3] - pos_ix;
+						double v1 = correctY(Pos[j * 3 + 1] - pos_iy);
+						double v2 = Pos[j * 3 + 2] - pos_iz;
+						double dist2 = v0*v0 + v1*v1 + v2*v2;
+						if (dist2 < r2) {
+							if (j != i && Typ[j] != GHOST) {
+								double dist = sqrt(dist2);
+								double w = WEI(dist, r);
+								Acc_x += (Vel[j * 3] - vec_ix)*w;
+								Acc_y += (Vel[j * 3 + 1] - vec_iy)*w;
+								Acc_z += (Vel[j * 3 + 2] - vec_iz)*w;
+							}
 						}
+						j = nxt[j];
+						if (j == -1) break;
 					}
-					j = nxt[j];
-					if (j == -1) break;
 				}
 			}
 			Acc[i * 3] = Acc_x*A1 + G_X;
@@ -447,19 +474,25 @@ void MkPrs() {
 					}
 				}
 			}
-			if (isPBBuket(iz*nBxy + iy*nBx + ix) > 0) {
-				int j = isPBBuket(iz*nBxy + iy*nBx + ix);
-				for (;;) {
-					double v0 = Pos[j * 3] - pos_ix;
-					double v1 = correctY(Pos[j * 3 + 1] - pos_iy);
-					double v2 = Pos[j * 3 + 2] - pos_iz;
-					double dist2 = v0*v0 + v1*v1 + v2*v2;
-					if (dist2<r2) {
-						if (j != i && Typ[j] != GHOST) {
-							double dist = sqrt(dist2);
-							double w = WEI(dist, r);
-							ni += w;
+			int PBBuket[9];
+			mk_PBBuket(iz*nBxy + iy*nBx + ix, PBBuket);
+			if (PBBuket[0] > 0) {
+				for (int k = 0; k < 9; k++) {
+					int j = bfst[PBBuket[k]];
+					for (;;) {
+						double v0 = Pos[j * 3] - pos_ix;
+						double v1 = correctY(Pos[j * 3 + 1] - pos_iy);
+						double v2 = Pos[j * 3 + 2] - pos_iz;
+						double dist2 = v0*v0 + v1*v1 + v2*v2;
+						if (dist2 < r2) {
+							if (j != i && Typ[j] != GHOST) {
+								double dist = sqrt(dist2);
+								double w = WEI(dist, r);
+								ni += w;
+							}
 						}
+						j = nxt[j];
+						if (j == -1) break;
 					}
 				}
 			}
@@ -510,19 +543,23 @@ void PrsGrdTrm() {
 					}
 				}
 			}
-			if (isPBBuket(iz*nBxy + iy*nBx + ix) > 0) {
-				int j = isPBBuket(iz*nBxy + iy*nBx + ix);
-				for (;;) {
-					double v0 = Pos[j * 3] - pos_ix;
-					double v1 = correctY(Pos[j * 3 + 1] - pos_iy);
-					double v2 = Pos[j * 3 + 2] - pos_iz;
-					double dist2 = v0*v0 + v1*v1 + v2*v2;
-					if (dist2 < r2) {
-						if (j != i && Typ[j] != GHOST) {
-							double dist = sqrt(dist2);
-							double w = WEI(dist, r);
-							w *= (Prs[j] + Prs[i]) / dist2;
-							Acc_x += v0*w;	Acc_y += v1*w;	Acc_z += v2*w;
+			int PBBuket[9];
+			mk_PBBuket(iz*nBxy + iy*nBx + ix, PBBuket);
+			if (PBBuket[0] > 0) {
+				for (int k = 0; k < 9; k++) {
+					int j = bfst[PBBuket[k]];
+					for (;;) {
+						double v0 = Pos[j * 3] - pos_ix;
+						double v1 = correctY(Pos[j * 3 + 1] - pos_iy);
+						double v2 = Pos[j * 3 + 2] - pos_iz;
+						double dist2 = v0*v0 + v1*v1 + v2*v2;
+						if (dist2 < r2) {
+							if (j != i && Typ[j] != GHOST) {
+								double dist = sqrt(dist2);
+								double w = WEI(dist, r);
+								w *= (Prs[j] + Prs[i]) / dist2;
+								Acc_x += v0*w;	Acc_y += v1*w;	Acc_z += v2*w;
+							}
 						}
 					}
 				}
@@ -698,18 +735,6 @@ void Rigid0(void) {
 	double deltaRot21 = 2.0*(qy0*qz0 + qs0*qx0);
 	double deltaRot22 = -2.0*(qx0*qx0 + qy0*qy0);
 
-	/*比較
-	RotationMatrix[0][0] = 1.0 - 2.0*(qy0*qy0 + qz0*qz0);
-	RotationMatrix[0][1] = 2.0*(qx0*qy0 - qs0*qz0);
-	RotationMatrix[0][2] = 2.0*(qx0*qz0 + qs0*qy0);
-	RotationMatrix[1][0] = 2.0*(qx0*qy0 + qs0*qz0);
-	RotationMatrix[1][1] = 1.0 - 2.0*(qx0*qx0 + qz0*qz0);
-	RotationMatrix[1][2] = 2.0*(qy0*qz0 - qs0*qx0);
-	RotationMatrix[2][0] = 2.0*(qx0*qz0 - qs0*qy0);
-	RotationMatrix[2][1] = 2.0*(qy0*qz0 + qs0*qx0);
-	RotationMatrix[2][2] = 1.0 - 2.0*(qx0*qx0 + qy0*qy0);
-	*/
-
 	qs0 = qqs; qx0 = qqx; qy0 = qqy; qz0 = qqz;
 
 	for (int i = 0; i < nP; i++) {
@@ -747,16 +772,29 @@ void Rigid0(void) {
 }
 
 void MoveSMWall() {
+	/*for (int i = 0; i < nP; i++) {
+		if (Typ[i] == SMWALL) {
+			if (Pos[i * 3] > 0.4) {
+				if (isnan(Pos[i * 3]) || isnan(Pos[i * 3 + 1]) || isnan(Pos[i * 3] + 1) || isnan(Vel[i * 3]) || isnan(Vel[i * 3 + 1]) || isnan(Vel[i * 3 + 2]) || isnan(Acc[i * 3]) || isnan(Acc[i * 3 + 1]) || isnan(Acc[i * 3 + 2])) {
+					printf("nan!");
+				}
+			}
+		}
+	}*/
 	for (int i = 0; i < nP; i++) {
 		if (Typ[i] == SMWALL) {
 			Vel[i * 3] += Acc[i * 3] * DT;	Vel[i * 3 + 1] += Acc[i * 3 + 1] * DT;	Vel[i * 3 + 2] += Acc[i * 3 + 2] * DT;
 			Pos[i * 3] += Vel[i * 3] * DT;		Pos[i * 3 + 1] += Vel[i * 3 + 1] * DT;		Pos[i * 3 + 2] += Vel[i * 3 + 2] * DT;
 			Acc[i * 3] = Acc[i * 3 + 1] = Acc[i * 3 + 2] = 0.0;
-			if (Pos[i*3]>0.4) {
-				//Typ[i] = FLUID;
+			printf("%f", Acc[i * 3]);
+			printf("%f", Vel[i * 3]);
+			if (Pos[i * 3] > 0.4) {
+				Typ[i] = FLUID;
+				printf("here");
 				ChkPcl(i);
 			}
 		}
+		printf("hoge");
 	}
 }
 
@@ -773,16 +811,15 @@ void ClcEMPS(void) {
 		}
 
 		MoveSMWall();
-		//MkBkt();
-		//VscTrm();
+		MkBkt();
+		VscTrm();
 		UpPcl1();
-		//ChkCol();
-		//MkPrs();
-		//PrsGrdTrm();
+		ChkCol();
+		MkPrs();
+		PrsGrdTrm();
 		UpPcl2();
-		//MkPrs();
-		//Rigid0();
-		//wdataG1();
+		MkPrs();
+		Rigid0();
 
 		for (int i = 0; i < nP; i++) { pav[i] += Prs[i]; }
 		iLP++;
@@ -911,7 +948,10 @@ int main(int argc, char** argv) {
 	else {
 		printf("%s", "error in args");
 		getchar();
-		return 1;
+		//1.8, 1.0, 700
+		fileNumber = "1";
+		DNS_RIGID0 = 700;
+		//return 1;
 	}
 
 	printf("start emps.\n");
@@ -942,6 +982,6 @@ int main(int argc, char** argv) {
 	}
 
 	printf(" END. \n");
-	//getchar();
+	getchar();
 	return 0;
 }

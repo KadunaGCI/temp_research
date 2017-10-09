@@ -25,10 +25,11 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 
 #define GHOST -1
 #define WALL  0
-#define SMWALL 1
-#define FLUID 2
-#define RIGID0 3
-#define NUM_TYP  5		//粒子の種類数
+#define SURFACEWALL 1
+#define SMWALL 2
+#define FLUID 3
+#define RIGID0 4
+#define NUM_TYP  6		//粒子の種類数
 
 #define RE  3  //3 4 5		PARTICLE_DISTANCE*(RE+0.1)が影響半径であることに注意
 
@@ -76,7 +77,7 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 
 #define DT 0.0005			//時間刻み幅
 #define dt_inv   double (1/DT)	
-#define FIN_TIM 6.0		//時間の上限
+#define FIN_TIM 2.0		//時間の上限
 #define SND 22			//音速
 #define OPT_FQC 100		//出力間隔を決める反復数
 #define KNM_VSC_FRUID 0.000001	//動粘性係数
@@ -90,4 +91,6 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 #define G_Y 0.0			//重力加速度のy成分
 #define G_Z -9.8			//重力加速度のz成分
 #define WEI(dist, re) ((re/dist) - 1.0)	//重み関数
+
+#define CORRECTION MAX_Y - MIN_Y
 
