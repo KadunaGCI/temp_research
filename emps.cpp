@@ -66,9 +66,11 @@ double *Pressure;
 double *pressave;
 int *ParticleType;
 
+int fordebug = 0;
+
 void ChkPcl(int i) {
 	// just correct y-axis
-	if (Pos[i * 3 + 1] > MAX_Y) {
+	/*if (Pos[i * 3 + 1] > MAX_Y) {
 		do {
 			Pos[i * 3 + 1] -= CORRECTION;
 		} while (Pos[i * 3 + 1] > MAX_Y);
@@ -77,6 +79,12 @@ void ChkPcl(int i) {
 		do {
 			Pos[i * 3 + 1] += CORRECTION;
 		} while (Pos[i * 3 + 1] < MIN_Y);
+	}*/
+	if (Pos[i * 3 + 1] > MAX_Y) {
+		Pos[i * 3 + 1] -= CORRECTION;
+	}
+	else if (Pos[i * 3 + 1] < MIN_Y) {
+		Pos[i * 3 + 1] += CORRECTION;
 	}
 	if (Pos[i * 3] > MAX_X || Pos[i * 3]<MIN_X ||
 		Pos[i * 3 + 2]>MAX_Z || Pos[i * 3 + 2] < MIN_Z)
@@ -176,11 +184,15 @@ void SetPara(void) {
 	A1 = 2.0*KNM_VSC_FRUID*DIM / n0 / lmd;//粘性項の計算に用いる係数
 	A2 = SND*SND / n0;				//圧力の計算に用いる係数
 	A3 = -DIM / n0;					//圧力勾配項の計算に用いる係数
-	Dns[FLUID] = DNS_FLUID;
 	Dns[WALL] = DNS_WALL;
+	Dns[SURFACEWALL] = DNS_WALL;
+	Dns[SMWALL] = DNS_WALL;
+	Dns[FLUID] = DNS_FLUID;
 	Dns[RIGID0] = DNS_RIGID0;
-	invDns[FLUID] = 1.0 / DNS_FLUID;
 	invDns[WALL] = 1.0 / DNS_WALL;
+	invDns[SURFACEWALL] = 1.0 / DNS_WALL;
+	invDns[SMWALL] = 1.0 / DNS_WALL;
+	invDns[FLUID] = 1.0 / DNS_FLUID;
 	invDns[RIGID0] = 1.0 / DNS_RIGID0;
 	rlim = PARTICLE_DISTANCE * DST_LMT_RAT;//これ以上の粒子間の接近を許さない距離
 	rlim2 = rlim*rlim;
@@ -352,7 +364,7 @@ void VscTrm() {
 						}
 					}
 				}
-			}
+			}/*
 			int PBBuket[9];
 			mk_PBBuket(iz*nBxy + iy*nBx + ix, PBBuket);
 			if (PBBuket[0] > 0) {
@@ -376,7 +388,7 @@ void VscTrm() {
 						if (j == -1) break;
 					}
 				}
-			}
+			}*/
 			Acc[i * 3] = Acc_x*A1 + G_X;
 			Acc[i * 3 + 1] = Acc_y*A1 + G_Y;
 			Acc[i * 3 + 2] = Acc_z*A1 + G_Z;
@@ -437,7 +449,9 @@ void ChkCol() {
 		}
 	}
 	for (int i = 0; i < nP; i++) {
-		Vel[i * 3] = Acc[i * 3];	Vel[i * 3 + 1] = Acc[i * 3 + 1];	Vel[i * 3 + 2] = Acc[i * 3 + 2];
+		if (Typ[i] != SMWALL) {
+			Vel[i * 3] = Acc[i * 3];	Vel[i * 3 + 1] = Acc[i * 3 + 1];	Vel[i * 3 + 2] = Acc[i * 3 + 2];
+		}
 	}
 }
 
@@ -473,7 +487,7 @@ void MkPrs() {
 						}
 					}
 				}
-			}
+			}/*
 			int PBBuket[9];
 			mk_PBBuket(iz*nBxy + iy*nBx + ix, PBBuket);
 			if (PBBuket[0] > 0) {
@@ -495,7 +509,7 @@ void MkPrs() {
 						if (j == -1) break;
 					}
 				}
-			}
+			}*/
 			double mi = Dns[Typ[i]];
 			double pressure = (ni > n0)*(ni - n0) * A2 * mi;
 			Prs[i] = pressure;
@@ -542,7 +556,7 @@ void PrsGrdTrm() {
 						}
 					}
 				}
-			}
+			}/*
 			int PBBuket[9];
 			mk_PBBuket(iz*nBxy + iy*nBx + ix, PBBuket);
 			if (PBBuket[0] > 0) {
@@ -563,7 +577,7 @@ void PrsGrdTrm() {
 						}
 					}
 				}
-			}
+			}*/
 			double mi = invDns[Typ[i]];
 			Acc[i * 3] = Acc_x*mi * A3;
 			Acc[i * 3 + 1] = Acc_y*mi * A3;
@@ -772,30 +786,29 @@ void Rigid0(void) {
 }
 
 void MoveSMWall() {
-	/*for (int i = 0; i < nP; i++) {
+	double hoge = 0.0;
+	int num = 0;
+	for (int i = 0; i < nP; i++) {
 		if (Typ[i] == SMWALL) {
-			if (Pos[i * 3] > 0.4) {
-				if (isnan(Pos[i * 3]) || isnan(Pos[i * 3 + 1]) || isnan(Pos[i * 3] + 1) || isnan(Vel[i * 3]) || isnan(Vel[i * 3 + 1]) || isnan(Vel[i * 3 + 2]) || isnan(Acc[i * 3]) || isnan(Acc[i * 3 + 1]) || isnan(Acc[i * 3 + 2])) {
-					printf("nan!");
-				}
-			}
+			hoge += Vel[i * 3];
+			num++;
 		}
-	}*/
+	}
 	for (int i = 0; i < nP; i++) {
 		if (Typ[i] == SMWALL) {
 			Vel[i * 3] += Acc[i * 3] * DT;	Vel[i * 3 + 1] += Acc[i * 3 + 1] * DT;	Vel[i * 3 + 2] += Acc[i * 3 + 2] * DT;
 			Pos[i * 3] += Vel[i * 3] * DT;		Pos[i * 3 + 1] += Vel[i * 3 + 1] * DT;		Pos[i * 3 + 2] += Vel[i * 3 + 2] * DT;
 			Acc[i * 3] = Acc[i * 3 + 1] = Acc[i * 3 + 2] = 0.0;
-			printf("%f", Acc[i * 3]);
-			printf("%f", Vel[i * 3]);
+			//printf("%f", Acc[i * 3]);
+			//printf("%f", Vel[i * 3]);
 			if (Pos[i * 3] > 0.4) {
 				Typ[i] = FLUID;
-				printf("here");
+				//printf("here");
 				ChkPcl(i);
 			}
 		}
-		printf("hoge");
 	}
+	printf("%d:ave:%f, num%d\n", iLP, hoge / num, num);
 }
 
 void ClcEMPS(void) {

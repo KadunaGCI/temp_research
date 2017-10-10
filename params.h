@@ -77,7 +77,7 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 
 #define DT 0.0005			//時間刻み幅
 #define dt_inv   double (1/DT)	
-#define FIN_TIM 2.0		//時間の上限
+#define FIN_TIM 0.2		//時間の上限
 #define SND 22			//音速
 #define OPT_FQC 100		//出力間隔を決める反復数
 #define KNM_VSC_FRUID 0.000001	//動粘性係数
