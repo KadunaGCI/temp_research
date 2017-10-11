@@ -137,9 +137,13 @@ void WrtDat(void) {
 		if (Typ[i] == GHOST)continue;
 		fprintf(fp, " %d %d %lf %lf %lf %lf %lf %lf %lf %lf\n", a[0], a[1], b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
 		pav[i] = 0.0;
+		/*if (a[0] == 73623) {
+			printf(" %d %d %lf %lf %lf %lf %lf %lf %lf %lf\n", a[0], a[1], b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
+		}*/
 	}
 	fclose(fp);
 	iF++;
+	//printf("in %d, %f, %f, %f\n", Typ[73623], Pos[73623*3], Pos[73623*3 + 1], Pos[73623*3 + 2]);
 }
 
 void AlcBkt(void) {
@@ -184,11 +188,13 @@ void SetPara(void) {
 	A1 = 2.0*KNM_VSC_FRUID*DIM / n0 / lmd;//粘性項の計算に用いる係数
 	A2 = SND*SND / n0;				//圧力の計算に用いる係数
 	A3 = -DIM / n0;					//圧力勾配項の計算に用いる係数
+	//Dns[DUMMY] = DNS_WALL;
 	Dns[WALL] = DNS_WALL;
 	Dns[SURFACEWALL] = DNS_WALL;
 	Dns[SMWALL] = DNS_WALL;
 	Dns[FLUID] = DNS_FLUID;
 	Dns[RIGID0] = DNS_RIGID0;
+	//invDns[DUMMY] = 1.0 / DNS_WALL;
 	invDns[WALL] = 1.0 / DNS_WALL;
 	invDns[SURFACEWALL] = 1.0 / DNS_WALL;
 	invDns[SMWALL] = 1.0 / DNS_WALL;
@@ -364,7 +370,7 @@ void VscTrm() {
 						}
 					}
 				}
-			}/*
+			}
 			int PBBuket[9];
 			mk_PBBuket(iz*nBxy + iy*nBx + ix, PBBuket);
 			if (PBBuket[0] > 0) {
@@ -388,7 +394,7 @@ void VscTrm() {
 						if (j == -1) break;
 					}
 				}
-			}*/
+			}
 			Acc[i * 3] = Acc_x*A1 + G_X;
 			Acc[i * 3 + 1] = Acc_y*A1 + G_Y;
 			Acc[i * 3 + 2] = Acc_z*A1 + G_Z;
@@ -456,9 +462,14 @@ void ChkCol() {
 }
 
 void MkPrs() {
-#pragma omp parallel for schedule(dynamic,64)
+	//#pragma omp parallel for schedule(dynamic,64)
 	for (int i = 0; i < nP; i++) {
-		if (Typ[i] != GHOST) {
+		if (Typ[i] != GHOST || Typ[i] != DUMMY) {
+			if (i == 73623) { 
+				bool hoge = (Typ[i] != GHOST);
+				printf("%d\n", hoge);
+				printf("MkPrs:%d, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", Typ[73623], Pos[73623 * 3], Pos[73623 * 3 + 1], Pos[73623 * 3 + 2], Vel[73623 * 3], Vel[73623 * 3 + 1], Vel[73623 * 3 + 2], Acc[73623 * 3], Acc[73623 * 3 + 1], Acc[73623 * 3 + 2]); 
+			}
 			double pos_ix = Pos[i * 3];	double pos_iy = Pos[i * 3 + 1];	double pos_iz = Pos[i * 3 + 2];
 			double ni = 0.0;
 			int ix = (int)((pos_ix - MIN_X)*DBinv) + 1;
@@ -468,6 +479,7 @@ void MkPrs() {
 				for (int jy = iy - 1; jy <= iy + 1; jy++) {
 					for (int jx = ix - 1; jx <= ix + 1; jx++) {
 						int jb = jz*nBxy + jy*nBx + jx;
+						//printf("%d\n",jb);
 						int j = bfst[jb];
 						if (j == -1) continue;
 						for (;;) {
@@ -487,7 +499,7 @@ void MkPrs() {
 						}
 					}
 				}
-			}/*
+			}
 			int PBBuket[9];
 			mk_PBBuket(iz*nBxy + iy*nBx + ix, PBBuket);
 			if (PBBuket[0] > 0) {
@@ -509,7 +521,7 @@ void MkPrs() {
 						if (j == -1) break;
 					}
 				}
-			}*/
+			}
 			double mi = Dns[Typ[i]];
 			double pressure = (ni > n0)*(ni - n0) * A2 * mi;
 			Prs[i] = pressure;
@@ -521,6 +533,7 @@ void PrsGrdTrm() {
 #pragma omp parallel for schedule(dynamic,64)
 	for (int i = 0; i < nP; i++) {
 		if (Typ[i] == FLUID || Typ[i] == RIGID0) {
+			if (i == 73623) { printf("PrsGrd1:%d, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", Typ[73623], Pos[73623 * 3], Pos[73623 * 3 + 1], Pos[73623 * 3 + 2], Vel[73623 * 3], Vel[73623 * 3 + 1], Vel[73623 * 3 + 2], Acc[73623 * 3], Acc[73623 * 3 + 1], Acc[73623 * 3 + 2]); }
 			double a[3][3] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 			double Acc_x = 0.0;			double Acc_y = 0.0;			double Acc_z = 0.0;
 			double pos_ix = Pos[i * 3];	double pos_iy = Pos[i * 3 + 1];	double pos_iz = Pos[i * 3 + 2];
@@ -556,7 +569,8 @@ void PrsGrdTrm() {
 						}
 					}
 				}
-			}/*
+			}
+			if (i == 73623) { printf("PrsGrd2:%f, %f, %f\n", Acc_x,Acc_y,Acc_z); }
 			int PBBuket[9];
 			mk_PBBuket(iz*nBxy + iy*nBx + ix, PBBuket);
 			if (PBBuket[0] > 0) {
@@ -577,11 +591,12 @@ void PrsGrdTrm() {
 						}
 					}
 				}
-			}*/
+			}
 			double mi = invDns[Typ[i]];
 			Acc[i * 3] = Acc_x*mi * A3;
 			Acc[i * 3 + 1] = Acc_y*mi * A3;
 			Acc[i * 3 + 2] = Acc_z*mi * A3;
+			if (i == 73623) { printf("PrsGrd3:%f, %f, %f\n", Acc_x, Acc_y, Acc_z); }
 		}
 	}
 }
@@ -590,6 +605,7 @@ void UpPcl2(void) {
 #pragma omp parallel for
 	for (int i = 0; i < nP; i++) {
 		if (Typ[i] == FLUID || Typ[i] == RIGID0) {
+			if (i == 73623) { printf("update1:%d, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", Typ[73623], Pos[73623 * 3], Pos[73623 * 3 + 1], Pos[73623 * 3 + 2], Vel[73623 * 3], Vel[73623 * 3 + 1], Vel[73623 * 3 + 2], Acc[73623 * 3], Acc[73623 * 3 + 1], Acc[73623 * 3 + 2]); }
 			Vel[i * 3] += Acc[i * 3] * DT;
 			Vel[i * 3 + 1] += Acc[i * 3 + 1] * DT;
 			Vel[i * 3 + 2] += Acc[i * 3 + 2] * DT;
@@ -597,7 +613,9 @@ void UpPcl2(void) {
 			Pos[i * 3 + 1] += Acc[i * 3 + 1] * DT*DT;
 			Pos[i * 3 + 2] += Acc[i * 3 + 2] * DT*DT;
 			Acc[i * 3] = Acc[i * 3 + 1] = Acc[i * 3 + 2] = 0.0;
+			if (i == 73623) { printf("update2:%d, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", Typ[73623], Pos[73623 * 3], Pos[73623 * 3 + 1], Pos[73623 * 3 + 2], Vel[73623 * 3], Vel[73623 * 3 + 1], Vel[73623 * 3 + 2], Acc[73623 * 3], Acc[73623 * 3 + 1], Acc[73623 * 3 + 2]); }
 			ChkPcl(i);
+			if (i == 73623) { printf("update3:%d, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", Typ[73623], Pos[73623 * 3], Pos[73623 * 3 + 1], Pos[73623 * 3 + 2], Vel[73623 * 3], Vel[73623 * 3 + 1], Vel[73623 * 3 + 2], Acc[73623 * 3], Acc[73623 * 3 + 1], Acc[73623 * 3 + 2]); }
 		}
 	}
 }
@@ -786,29 +804,18 @@ void Rigid0(void) {
 }
 
 void MoveSMWall() {
-	double hoge = 0.0;
-	int num = 0;
-	for (int i = 0; i < nP; i++) {
-		if (Typ[i] == SMWALL) {
-			hoge += Vel[i * 3];
-			num++;
-		}
-	}
 	for (int i = 0; i < nP; i++) {
 		if (Typ[i] == SMWALL) {
 			Vel[i * 3] += Acc[i * 3] * DT;	Vel[i * 3 + 1] += Acc[i * 3 + 1] * DT;	Vel[i * 3 + 2] += Acc[i * 3 + 2] * DT;
 			Pos[i * 3] += Vel[i * 3] * DT;		Pos[i * 3 + 1] += Vel[i * 3 + 1] * DT;		Pos[i * 3 + 2] += Vel[i * 3 + 2] * DT;
 			Acc[i * 3] = Acc[i * 3 + 1] = Acc[i * 3 + 2] = 0.0;
-			//printf("%f", Acc[i * 3]);
-			//printf("%f", Vel[i * 3]);
 			if (Pos[i * 3] > 0.4) {
 				Typ[i] = FLUID;
-				//printf("here");
 				ChkPcl(i);
 			}
 		}
 	}
-	printf("%d:ave:%f, num%d\n", iLP, hoge / num, num);
+	//printf("%d:ave:%f, num%d\n", iLP, hoge / num, num);
 }
 
 void ClcEMPS(void) {
@@ -830,7 +837,9 @@ void ClcEMPS(void) {
 		ChkCol();
 		MkPrs();
 		PrsGrdTrm();
+		//printf("after PrsGrd:%d, %f, %f, %f\n", Typ[73623], Pos[73623 * 3], Pos[73623 * 3 + 1], Pos[73623 * 3 + 2]);
 		UpPcl2();
+		//printf("after Update:%d, %f, %f, %f\n", Typ[73623], Pos[73623 * 3], Pos[73623 * 3 + 1], Pos[73623 * 3 + 2]);
 		MkPrs();
 		Rigid0();
 
@@ -995,6 +1004,5 @@ int main(int argc, char** argv) {
 	}
 
 	printf(" END. \n");
-	getchar();
 	return 0;
 }

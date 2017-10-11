@@ -24,17 +24,18 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 #define mk_MAX_Z  0.2
 
 #define GHOST -1
-#define WALL  0
-#define SURFACEWALL 1
-#define SMWALL 2
-#define FLUID 3
-#define RIGID0 4
-#define NUM_TYP  6		//粒子の種類数
+#define DUMMY 0
+#define WALL  1
+#define SURFACEWALL 2
+#define SMWALL 3
+#define FLUID 4
+#define RIGID0 5
+#define NUM_TYP  7		//粒子の種類数
 
 #define RE  3  //3 4 5		PARTICLE_DISTANCE*(RE+0.1)が影響半径であることに注意
 
 //#define WAVE_HEIGHT 0.5
-#define WAVE_WIDTH 0.25
+//#define WAVE_WIDTH 0.25
 // 奥行きはmk_MAX_Y
 
 #define PARTICLE_DISTANCE 0.01 
@@ -55,12 +56,12 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 
 //#define PARTICLE_DISTANCE 0.002					//平均粒子間距離
 
-#define MIN_X  (mk_MIN_X - PARTICLE_DISTANCE*3)	//解析領域のx方向の最小値
-#define MIN_Y  (mk_MIN_Y - PARTICLE_DISTANCE*3)	//解析領域のy方向の最小値
-#define MIN_Z  (mk_MIN_Z - PARTICLE_DISTANCE*3)	//解析領域のz方向の最小値
-#define MAX_X  (mk_MAX_X + PARTICLE_DISTANCE*3)	//解析領域のx方向の最大値
-#define MAX_Y  (mk_MAX_Y + PARTICLE_DISTANCE*3)	//解析領域のy方向の最大値
-#define MAX_Z  (mk_MAX_Z + PARTICLE_DISTANCE*10)	//解析領域のz方向の最大値
+#define MIN_X  (mk_MIN_X - PARTICLE_DISTANCE*3*2)	//解析領域のx方向の最小値
+#define MIN_Y  (mk_MIN_Y - PARTICLE_DISTANCE*3*2)	//解析領域のy方向の最小値
+#define MIN_Z  (mk_MIN_Z - PARTICLE_DISTANCE*3*2)	//解析領域のz方向の最小値
+#define MAX_X  (mk_MAX_X + PARTICLE_DISTANCE*3*2)	//解析領域のx方向の最大値
+#define MAX_Y  (mk_MAX_Y + PARTICLE_DISTANCE*3*2)	//解析領域のy方向の最大値
+#define MAX_Z  (mk_MAX_Z + PARTICLE_DISTANCE*30)	//解析領域のz方向の最大値
 
 /*
 #define GHOST -1
@@ -77,7 +78,7 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 
 #define DT 0.0005			//時間刻み幅
 #define dt_inv   double (1/DT)	
-#define FIN_TIM 0.2		//時間の上限
+#define FIN_TIM 1.0		//時間の上限
 #define SND 22			//音速
 #define OPT_FQC 100		//出力間隔を決める反復数
 #define KNM_VSC_FRUID 0.000001	//動粘性係数
