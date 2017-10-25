@@ -22,9 +22,21 @@ int nz = (int)((mk_MAX_Z - mk_MIN_Z) / PARTICLE_DISTANCE) + RE * 2 + 2 + 1;
 int nxy = nx*ny;
 int nxyz = nx*ny*nz;
 
+
 int NumberOfParticle;
 int *ParticleType;
 float *Position;
+
+int Rnx = (int)((mk_MAX_X - mk_MIN_X) / PARTICLE_DISTANCE) + RE * 2 + 2 + 1;
+int Rny = (int)((mk_MAX_Y - mk_MIN_Y) / PARTICLE_DISTANCE) + RE * 2 + 2 + 1;
+int Rnz = (int)((mk_MAX_Z - mk_MIN_Z) / PARTICLE_DISTANCE) + RE * 2 + 2 + 1;
+int Rnxy = Rnx*Rny;
+int Rnxyz = Rnx*Rny*Rnz;
+
+int RNumberOfParticle;
+int *RParticleType;
+float *RPosition;
+
 
 // vtu
 FILE* fp;
@@ -126,8 +138,8 @@ double findMinX_in_FRONTWALL() {
 		for (int iy = 0; iy < ny; iy++) {
 			for (int ix = 0; ix < nx; ix++) {
 				int ip = iz*nxy + iy*nx + ix;
-				if (ParticleType[ip] == DUMMY && Position[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && Position[ip * 3 + 2] >= mk_MIN_Z && Position[ip * 3] < res) {
-					res = Position[ip * 3];
+				if (RParticleType[ip] == DUMMY && RPosition[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && RPosition[ip * 3 + 2] >= mk_MIN_Z && RPosition[ip * 3] < res) {
+					res = RPosition[ip * 3];
 				}
 			}
 		}
@@ -141,8 +153,8 @@ void mk_FRONTWALL() {
 		for (int iy = 0; iy < ny; iy++) {
 			for (int ix = 0; ix < nx; ix++) {
 				int ip = iz*nxy + iy*nx + ix;
-				if (ParticleType[ip] == DUMMY && Position[ip * 3] == min && Position[ip * 3 + 2] >= mk_MIN_Z) {
-					ParticleType[ip] = FRONTWALL;
+				if (RParticleType[ip] == DUMMY && RPosition[ip * 3] == min && RPosition[ip * 3 + 2] >= mk_MIN_Z) {
+					RParticleType[ip] = FRONTWALL;
 				}
 			}
 		}
@@ -161,8 +173,8 @@ void mk_FRONT() {
 		for (int iy = 0; iy < ny; iy++) {
 			for (int ix = 0; ix < nx; ix++) {
 				int ip = iz*nxy + iy*nx + ix;
-				if (ParticleType[ip] == DUMMY && Position[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && Position[ip * 3 + 2] >= mk_MIN_Z && Position[ip * 3] > threshold) {
-					threshold = Position[ip * 3];
+				if (RParticleType[ip] == DUMMY && RPosition[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && RPosition[ip * 3 + 2] >= mk_MIN_Z && RPosition[ip * 3] > threshold) {
+					threshold = RPosition[ip * 3];
 				}
 			}
 		}
@@ -171,8 +183,8 @@ void mk_FRONT() {
 		for (int iy = 0; iy < ny; iy++) {
 			for (int ix = 0; ix < nx; ix++) {
 				int ip = iz*nxy + iy*nx + ix;
-				if (ParticleType[ip] == DUMMY && Position[ip * 3] == threshold && Position[ip * 3 + 2] >= mk_MIN_Z) {
-					ParticleType[ip] = WALL;
+				if (RParticleType[ip] == DUMMY && RPosition[ip * 3] == threshold && RPosition[ip * 3 + 2] >= mk_MIN_Z) {
+					RParticleType[ip] = WALL;
 				}
 			}
 		}
@@ -183,8 +195,8 @@ void mk_FRONT() {
 		for (int iy = 0; iy < ny; iy++) {
 			for (int ix = 0; ix < nx; ix++) {
 				int ip = iz*nxy + iy*nx + ix;
-				if (ParticleType[ip] == DUMMY && Position[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && Position[ip * 3 + 2] >= mk_MIN_Z && Position[ip * 3 + 1] > threshold) {
-					threshold = Position[ip * 3 + 1];
+				if (RParticleType[ip] == DUMMY && RPosition[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && RPosition[ip * 3 + 2] >= mk_MIN_Z && RPosition[ip * 3 + 1] > threshold) {
+					threshold = RPosition[ip * 3 + 1];
 				}
 			}
 		}
@@ -193,8 +205,8 @@ void mk_FRONT() {
 		for (int iy = 0; iy < ny; iy++) {
 			for (int ix = 0; ix < nx; ix++) {
 				int ip = iz*nxy + iy*nx + ix;
-				if (ParticleType[ip] == DUMMY && Position[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE&& Position[ip * 3 + 1] == threshold && Position[ip * 3 + 2] >= mk_MIN_Z) {
-					ParticleType[ip] = WALL;
+				if (RParticleType[ip] == DUMMY && RPosition[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE&& RPosition[ip * 3 + 1] == threshold && RPosition[ip * 3 + 2] >= mk_MIN_Z) {
+					RParticleType[ip] = WALL;
 				}
 			}
 		}
@@ -205,8 +217,8 @@ void mk_FRONT() {
 		for (int iy = 0; iy < ny; iy++) {
 			for (int ix = 0; ix < nx; ix++) {
 				int ip = iz*nxy + iy*nx + ix;
-				if (ParticleType[ip] == DUMMY && Position[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && Position[ip * 3 + 2] >= mk_MIN_Z && Position[ip * 3 + 1] < threshold) {
-					threshold = Position[ip * 3 + 1];
+				if (RParticleType[ip] == DUMMY && RPosition[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && RPosition[ip * 3 + 2] >= mk_MIN_Z && RPosition[ip * 3 + 1] < threshold) {
+					threshold = RPosition[ip * 3 + 1];
 				}
 			}
 		}
@@ -215,8 +227,8 @@ void mk_FRONT() {
 		for (int iy = 0; iy < ny; iy++) {
 			for (int ix = 0; ix < nx; ix++) {
 				int ip = iz*nxy + iy*nx + ix;
-				if (ParticleType[ip] == DUMMY && Position[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && Position[ip * 3 + 1] == threshold && Position[ip * 3 + 2] >= mk_MIN_Z) {
-					ParticleType[ip] = WALL;
+				if (RParticleType[ip] == DUMMY && RPosition[ip * 3] >= 2.0 - 0.1 - PARTICLE_DISTANCE && RPosition[ip * 3 + 1] == threshold && RPosition[ip * 3 + 2] >= mk_MIN_Z) {
+					RParticleType[ip] = WALL;
 				}
 			}
 		}
@@ -248,6 +260,7 @@ int main(int argc, char** argv) {
 		sprintf(OUTPUT_FILE, "../data/init_position_%s.prof", fileNumber);
 		sprintf(IN_DATA, "../data/init_position_%s.prof", fileNumber);
 		sprintf(OUT_DATA_VTU, "../data/chk_init_position_%s.vtu", fileNumber);
+		printf("WAVESPEED%f\n",WAVE_SPEED);
 	}
 	else {
 		printf("%s", "error in args");
@@ -266,7 +279,6 @@ int main(int argc, char** argv) {
 	Position = (float*)malloc(sizeof(float)*nxyz * 3);
 	int NumberOfParticle = 0;
 
-	double maxy = 0;
 	for (int iz = 0; iz < nz; iz++) {
 		for (int iy = 0; iy < ny; iy++) {
 			for (int ix = 0; ix < nx; ix++) {
@@ -278,10 +290,6 @@ int main(int argc, char** argv) {
 				Position[ip * 3] = mk_MIN_X + PARTICLE_DISTANCE*(ix - (RE + 1));
 				Position[ip * 3 + 1] = mk_MIN_Y + PARTICLE_DISTANCE*(iy - (RE + 1));
 				Position[ip * 3 + 2] = mk_MIN_Z + PARTICLE_DISTANCE*(iz - (RE + 1));
-				if (maxy < mk_MIN_Y + PARTICLE_DISTANCE*(iy - RE)) {
-					maxy = mk_MIN_Y + PARTICLE_DISTANCE*(iy - RE);
-					//intf("%f", maxy);
-				}
 			}
 		}
 	}
@@ -305,19 +313,59 @@ int main(int argc, char** argv) {
 					NumberOfParticle++;
 				}
 				// (1.9, y/2, 0)を中心の塔
-				else if (x >= 2.0 - 0.1 && x < 2.0 + 0.1 && y >= CENTER_CUBE_Y - 0.1  && y < CENTER_CUBE_Y + 0.1) {
+				/*else if (x >= 2.0 - 0.1 && x < 2.0 + 0.1 && y >= CENTER_CUBE_Y - 0.1 + PARTICLE_DISTANCE / 2 && y < CENTER_CUBE_Y + 0.1 + PARTICLE_DISTANCE / 2) {
 					ParticleType[ip] = DUMMY;
 					NumberOfParticle++;
-				}
-				//else if (x >= CENTER_CUBE_X - LENGTH_CUBE_X / 2 && x < CENTER_CUBE_X + LENGTH_CUBE_X / 2 && y >= CENTER_CUBE_Y - LENGTH_CUBE_Y / 2 && y < CENTER_CUBE_Y + LENGTH_CUBE_Y / 2 && z >= CENTER_CUBE_Z - LENGTH_CUBE_Z / 2 && z < CENTER_CUBE_Z + LENGTH_CUBE_Z / 2) {
-				//	ParticleType[ip] = RIGID0;
-				//	NumberOfParticle++;
-				//	nr0++;
-				//	//printf("%d",nr0);
-				//}
-				else if (z <= WAVE_HEIGHT && x <= 0.4 && y <= mk_MAX_Y / 3) {
-					ParticleType[ip] = FLUID;
+				}*/
+				else if (x >= CENTER_CUBE_X - LENGTH_CUBE_X / 2 && x < CENTER_CUBE_X + LENGTH_CUBE_X / 2 && y >= CENTER_CUBE_Y - LENGTH_CUBE_Y / 2 && y < CENTER_CUBE_Y + LENGTH_CUBE_Y / 2 && z >= CENTER_CUBE_Z - LENGTH_CUBE_Z / 2 && z < CENTER_CUBE_Z + LENGTH_CUBE_Z / 2) {
+					ParticleType[ip] = RIGID0;
 					NumberOfParticle++;
+					nr0++;
+					//printf("%d",nr0);
+				}
+				//else if (z <= WAVE_HEIGHT && x <= 0.4 && y <= mk_MAX_Y) {
+				else if (z <= WAVE_HEIGHT && x <= 0.4) {
+					ParticleType[ip] = SMWALL;
+					NumberOfParticle++;
+				}
+			}
+		}
+	}
+
+	// make rigid
+
+	RParticleType = (int*)malloc(sizeof(int)*nxyz);
+	RPosition = (float*)malloc(sizeof(float)*nxyz * 3);
+	int RNumberOfParticle = 0;
+
+	for (int iz = 0; iz < nz; iz++) {
+		for (int iy = 0; iy < ny; iy++) {
+			for (int ix = 0; ix < nx; ix++) {
+				int ip = iz*nxy + iy*nx + ix;
+				RParticleType[ip] = GHOST;
+				//Position[ip * 3] = mk_MIN_X + PARTICLE_DISTANCE*(ix - RE + 0.5);
+				//Position[ip * 3 + 1] = mk_MIN_Y + PARTICLE_DISTANCE*(iy - RE + 0.5);
+				//Position[ip * 3 + 2] = mk_MIN_Z + PARTICLE_DISTANCE*(iz - RE + 0.5);
+				RPosition[ip * 3] = mk_MIN_X + PARTICLE_DISTANCE*(ix - (RE + 1));
+				RPosition[ip * 3 + 1] = mk_MIN_Y + PARTICLE_DISTANCE*(iy - (RE + 1.5));
+				RPosition[ip * 3 + 2] = mk_MIN_Z + PARTICLE_DISTANCE*(iz - (RE + 1));
+			}
+		}
+	}
+	//intf("%f", maxy);
+	int Rnr0 = 0;
+
+	for (int iz = 0; iz < nz; iz++) {
+		for (int iy = 0; iy < ny; iy++) {
+			for (int ix = 0; ix < nx; ix++) {
+				int ip = iz*nxy + iy*nx + ix;
+				double x = RPosition[ip * 3];
+				double y = RPosition[ip * 3 + 1];
+				double z = RPosition[ip * 3 + 2];
+				// (1.9, y/2, 0)を中心の塔
+				if (x >= 2.0 - 0.1 && x < 2.0 + 0.1 && y >= CENTER_CUBE_Y - 0.1&& y < CENTER_CUBE_Y + 0.1 && z >= 0) {
+					RParticleType[ip] = DUMMY;
+					RNumberOfParticle++;
 				}
 			}
 		}
@@ -325,9 +373,9 @@ int main(int argc, char** argv) {
 
 	mk_FRONT();
 
-	printf("NumberOfParticle:     %d\n", NumberOfParticle);
+	printf("NumberOfParticle:     %d\n", NumberOfParticle + RNumberOfParticle);
 	fopen_s(&fp, OUTPUT_FILE, "w");
-	fprintf(fp, "%d %d\n", NumberOfParticle, nr0);
+	fprintf(fp, "%d %d\n", NumberOfParticle + RNumberOfParticle, nr0 + Rnr0);
 	int k = 0;
 	for (int iz = 0; iz < nz; iz++) {
 		for (int iy = 0; iy < ny; iy++) {
@@ -346,9 +394,22 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	for (int iz = 0; iz < nz; iz++) {
+		for (int iy = 0; iy < ny; iy++) {
+			for (int ix = 0; ix < nx; ix++) {
+				int ip = iz*nxy + iy*nx + ix;
+				if (RParticleType[ip] == GHOST)continue;
+				fprintf(fp, " %d %d %lf %lf %lf 0.0 0.0 0.0 0.0 0.0\n", k, RParticleType[ip], RPosition[ip * 3], RPosition[ip * 3 + 1], RPosition[ip * 3 + 2]);
+				k++;
+			}
+		}
+	}
+
 	fclose(fp);
 
 	free(ParticleType);	free(Position);
+	free(RParticleType);	free(RPosition);
+
 	printf("end mk_particle\n");
 
 	// vtu

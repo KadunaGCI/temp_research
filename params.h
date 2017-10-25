@@ -7,7 +7,7 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 
 //#define WAVE_HEIGHT 0.5
 //#define CENTER_CUBE_X 0.5
-//#define DNS_RIGID0 500	//剛体密度	
+//#define DNS_RIGID0 700	//剛体密度	
 
 /*****************************************************************
 
@@ -57,7 +57,7 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 //#define PARTICLE_DISTANCE 0.002					//平均粒子間距離
 
 #define MIN_X  (mk_MIN_X - PARTICLE_DISTANCE*4)	//解析領域のx方向の最小値
-#define MIN_Y  (mk_MIN_Y - PARTICLE_DISTANCE*4 - PARTICLE_DISTANCE/2)	//解析領域のy方向の最小値 and peropdic boundary condition
+#define MIN_Y  (mk_MIN_Y - PARTICLE_DISTANCE*4 - PARTICLE_DISTANCE/2)	//解析領域のy方向の最小値 and for periodic boundary condition
 #define MIN_Z  (mk_MIN_Z - PARTICLE_DISTANCE*4)	//解析領域のz方向の最小値
 #define MAX_X  (mk_MAX_X + PARTICLE_DISTANCE*4)	//解析領域のx方向の最大値
 #define MAX_Y  (mk_MAX_Y + PARTICLE_DISTANCE*4 + PARTICLE_DISTANCE/2)	//解析領域のy方向の最大値
@@ -78,7 +78,7 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 
 #define DT 0.0004			//時間刻み幅
 #define dt_inv   double (1/DT)	
-#define FIN_TIM 0.5  //時間の上限
+#define FIN_TIM 4.0  //時間の上限
 #define SND 22			//音速
 #define OPT_FQC 100		//出力間隔を決める反復数
 #define KNM_VSC_FRUID 0.000001	//動粘性係数
@@ -94,5 +94,4 @@ dam_break_testにおける可変パラメータ 引数で渡すこと
 #define WEI(dist, re) ((re/dist) - 1.0)	//重み関数
 
 #define CORRECTION MAX_Y - MIN_Y
-#define DELTA 1e-7/2 // float 有効数字/2
 

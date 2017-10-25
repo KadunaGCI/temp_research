@@ -13,8 +13,8 @@
 
 //#define IN_FILE "../data/init_position.prof"
 char IN_FILE[100];
-#define IN_DIR_VTU "../result/10102017_52008"
-#define OUT_DIR_VTU "../result/10102017_52008"
+#define IN_DIR_VTU "../data"
+#define OUT_DIR_VTU "../data"
 
 FILE* fp;
 char filename[256];
@@ -27,6 +27,7 @@ double *Velocity;
 double *Pressure;
 double *pressave;
 int *ParticleType;
+double *particleDens;
 
 int fordebug = 0;
 
@@ -41,16 +42,20 @@ void read_data(int iFile) {
 	Pressure = (double*)malloc(sizeof(double)*NumberOfParticle);
 	pressave = (double*)malloc(sizeof(double)*NumberOfParticle);
 	ParticleType = (int*)malloc(sizeof(int)*NumberOfParticle);
+	particleDens = (double*)malloc(sizeof(double)*NumberOfParticle);
 
 	for (int i = 0; i < NumberOfParticle; i++) {
 		int a[2];
 		double b[8];
-		fscanf_s(fp, " %d %d %lf %lf %lf %lf %lf %lf %lf %lf", &a[0], &a[1], &b[0], &b[1], &b[2], &b[3], &b[4], &b[5], &b[6], &b[7]);
+		double c[1];
+		fscanf_s(fp, " %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf", &a[0], &a[1], &b[0], &b[1], &b[2], &b[3], &b[4], &b[5], &b[6], &b[7], &c[0]);
 		ParticleType[i] = a[1];
 		Position[i * 3] = b[0];	Position[i * 3 + 1] = b[1];	Position[i * 3 + 2] = b[2];
 		Velocity[i * 3] = b[3];	Velocity[i * 3 + 1] = b[4];	Velocity[i * 3 + 2] = b[5];
 		Pressure[i] = b[6];
 		pressave[i] = b[7];
+		particleDens[i] = c[0];
+		//printf("%d",a[1]);
 	}
 	fclose(fp);
 }
@@ -88,10 +93,13 @@ int main() {
 		read_data(iFile);
 		Prs_Series[iFile] = 0;
 
+		printf("%d--------------------------\n", iFile);
+
 		for (int j = 0; j < NumberOfParticle; j++) {
-			if (ParticleType[j] == SURFACEWALL) {
-				Prs_Series[iFile] += pressave[j] * PARTICLE_DISTANCE*PARTICLE_DISTANCE / 3;
-				//printf("%f\n", Prs_Series[iFile]);
+			//printf("hoge");
+			if (ParticleType[j] == FRONTWALL) {
+				Prs_Series[iFile] += Pressure[j] * PARTICLE_DISTANCE*PARTICLE_DISTANCE;
+				//printf("%f\n", pressave[j]);
 			}
 		}
 

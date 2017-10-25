@@ -58,61 +58,39 @@ double DNS_RIGID0;	//剛体密度
 char *fileNumber;
 
 // vtuへの変換で利用
-int NumberOfParticle;
-int ProfFileNumber;
-double *Position;
-double *Velocity;
-double *Pressure;
-double *pressave;
-int *ParticleType;
+//int NumberOfParticle;
+//int ProfFileNumber;
+//double *Position;
+//double *Velocity;
+//double *Pressure;
+//double *pressave;
+//int *ParticleType;
 
 double* partDens;		//デバッグのため
+double* Prs_Series;
 
 void ChkPcl(int i) {
-	// just correct y-axis
-	/*if (Pos[i * 3 + 1] > MAX_Y) {
-		do {
-			Pos[i * 3 + 1] -= CORRECTION;
-		} while (Pos[i * 3 + 1] > MAX_Y);
-	}
-	else if (Pos[i * 3 + 1] < MIN_Y) {
-		do {
-			Pos[i * 3 + 1] += CORRECTION;
-		} while (Pos[i * 3 + 1] < MIN_Y);
-	}*/
-	//if (Pos[i * 3 + 1] > MAX_Y + DELTA) {
 	if (Pos[i * 3 + 1] > MAX_Y) {
-		/*if (Typ[i] == WALL || Typ[i] == DUMMY) {
-			printf("stop!");
-		}*/
 		Pos[i * 3 + 1] -= CORRECTION;
-		/*if (i == 47508) {
-			printf("cor:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		}*/
 		if (Pos[i * 3 + 1] > MAX_Y) {
 			printf("chk:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", i, Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
 			printf("fuck");
 		}
 	}
-	//else if (Pos[i * 3 + 1] + DELTA < MIN_Y) {
 	else if (Pos[i * 3 + 1] < MIN_Y) {
-		/*if (Typ[i] == WALL || Typ[i] == DUMMY) {
-			printf("stop!");
-		}*/
 		Pos[i * 3 + 1] += CORRECTION;
-		/*if (i == 47508) {
-			printf("cor:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		}*/
 		if (Pos[i * 3 + 1] < MIN_Y) {
 			printf("chk:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", i, Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
 			printf("fuck");
 		}
 	}
-	/*if (Pos[i * 3] > MAX_X + DELTA || Pos[i * 3] + DELTA < MIN_X ||
-		Pos[i * 3 + 2]> MAX_Z + DELTA || Pos[i * 3 + 2] + DELTA < MIN_Z){*/
 	if (Pos[i * 3] > MAX_X || Pos[i * 3]< MIN_X ||
 		Pos[i * 3 + 2]> MAX_Z || Pos[i * 3 + 2] < MIN_Z) {
-		//printf("%d", Typ[i]);
+
+		if (Typ[i] == RIGID0) {
+			printf("RIGID:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", i, Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+			printf("stop");
+		}
 		Typ[i] = GHOST;
 		Prs[i] = Vel[i * 3] = Vel[i * 3 + 1] = Vel[i * 3 + 2] = 0.0;
 	}
@@ -120,6 +98,7 @@ void ChkPcl(int i) {
 
 void RdDat(void) {
 	sprintf(IN_FILE, "../data/init_position_%s.prof", fileNumber);
+	//sprintf(IN_FILE, "../data/output%s.prof", "00010");
 	fopen_s(&fp, IN_FILE, "r");
 	fscanf_s(fp, "%d %d", &nP, &nr0);
 	printf("nP: %d\n", nP);
@@ -131,7 +110,7 @@ void RdDat(void) {
 	Prs = (double*)malloc(sizeof(double)*nP); alcSize += _msize(Prs);		//粒子の圧力
 	pav = (double*)malloc(sizeof(double)*nP); alcSize += _msize(pav);		//時間平均された粒子の圧力
 	Typ = (int*)malloc(sizeof(int)*nP);	alcSize += _msize(Typ);				//粒子の種類
-	partDens = (double*)malloc(sizeof(double)*nP); alcSize += _msize(pav);  //近傍流指数蜜動
+	partDens = (double*)malloc(sizeof(double)*nP); alcSize += _msize(pav);  //近傍流指数密度
 	for (int i = 0; i < nP; i++) {
 		int a[2];
 		double b[8];
@@ -148,6 +127,7 @@ void RdDat(void) {
 	for (int i = 0; i < nP * 3; i++) { PrePos[i] = Pos[i]; }
 }
 
+// 途中から計算を再開できるようにするため
 void WrtDat(void) {
 	char outout_filename[256];
 	sprintf_s(outout_filename, "../data/output%05d.prof", iF);
@@ -168,7 +148,6 @@ void WrtDat(void) {
 		}*/
 	}
 	fclose(fp);
-	iF++;
 	//printf("in %d, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i*3], Pos[i*3 + 1], Pos[i*3 + 2]);
 }
 
@@ -232,6 +211,9 @@ void SetPara(void) {
 	iLP = 0;			//反復数
 	iF = 0;			//ファイル番号
 	TIM = 0.0;		//時刻
+
+	int maxIF = (int)(FIN_TIM / (DT*OPT_FQC)) + 2;		//これで十分なはず
+	Prs_Series = (double*)malloc(sizeof(double)*maxIF);
 }
 
 void init_rigid0(void) {
@@ -306,21 +288,21 @@ void init_rigid0(void) {
 	InertiaTensorInv0[2][0] = A20; InertiaTensorInv0[2][1] = A21; InertiaTensorInv0[2][2] = A22;
 }
 
-bool myPosCk(int ix, int iy, int iz) {
-	if (ix<0 || iy<0 || iz<0 || ix>nBxyz || iy>nBxyz || iz>nBxyz) {
-		printf("fuck");
-		return false;
-	}
-	else return true;
-}
-
-bool myVelCk(int i) {
-	if (Vel[3 * i] > 2 || Vel[3 * i + 1] > 2 || Vel[3 * i + 2] > 2) {
-		printf("fuck");
-		return false;
-	}
-	else return true;
-}
+//bool myPosCk(int ix, int iy, int iz) {
+//	if (ix<0 || iy<0 || iz<0 || ix>nBxyz || iy>nBxyz || iz>nBxyz) {
+//		printf("fuck");
+//		return false;
+//	}
+//	else return true;
+//}
+//
+//bool myVelCk(int i) {
+//	if (Vel[3 * i] > 2 || Vel[3 * i + 1] > 2 || Vel[3 * i + 2] > 2) {
+//		printf("fuck");
+//		return false;
+//	}
+//	else return true;
+//}
 
 void MkBkt(void) {
 	for (int i = 0; i < nBxyz; i++) { bfst[i] = -1; }
@@ -333,7 +315,7 @@ void MkBkt(void) {
 		int ix = (int)((Pos[i * 3] - MIN_X)*DBinv) + 1;
 		int iy = (int)((Pos[i * 3 + 1] - MIN_Y)*DBinv) + 1;
 		int iz = (int)((Pos[i * 3 + 2] - MIN_Z)*DBinv) + 1;
-		myPosCk(ix, iy, iz);
+		//myPosCk(ix, iy, iz);
 		int ib = iz*nBxy + iy*nBx + ix;
 		int j = blst[ib];
 		blst[ib] = i;
@@ -411,7 +393,7 @@ void VscTrm() {
 			int ix = (int)((pos_ix - MIN_X)*DBinv) + 1;
 			int iy = (int)((pos_iy - MIN_Y)*DBinv) + 1;
 			int iz = (int)((pos_iz - MIN_Z)*DBinv) + 1;
-			myPosCk(ix, iy, iz);
+			//myPosCk(ix, iy, iz);
 			for (int jz = iz - 1; jz <= iz + 1; jz++) {
 				for (int jy = iy - 1; jy <= iy + 1; jy++) {
 					for (int jx = ix - 1; jx <= ix + 1; jx++) {
@@ -481,7 +463,7 @@ void UpPcl1() {
 				printf("up1:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
 			}*/
 			ChkPcl(i);
-			myVelCk(i);
+			//myVelCk(i);
 		}
 		/*if (Vel[i * 3] > 4 || Vel[i * 3 + 1] > 4 || Vel[i * 3 + 2] > 4) {
 			printf("%d:%8.3e, %8.3e, %8.3e\n", i,Vel[i * 3],Vel[i * 3 + 1],Vel[i * 3 + 2]);
@@ -501,7 +483,7 @@ void ChkCol() {
 			int ix = (int)((pos_ix - MIN_X)*DBinv) + 1;
 			int iy = (int)((pos_iy - MIN_Y)*DBinv) + 1;
 			int iz = (int)((pos_iz - MIN_Z)*DBinv) + 1;
-			myPosCk(ix, iy, iz);
+			//myPosCk(ix, iy, iz);
 			for (int jz = iz - 1; jz <= iz + 1; jz++) {
 				for (int jy = iy - 1; jy <= iy + 1; jy++) {
 					for (int jx = ix - 1; jx <= ix + 1; jx++) {
@@ -577,7 +559,7 @@ void MkPrs() {
 			int ix = (int)((pos_ix - MIN_X)*DBinv) + 1;
 			int iy = (int)((pos_iy - MIN_Y)*DBinv) + 1;
 			int iz = (int)((pos_iz - MIN_Z)*DBinv) + 1;
-			myPosCk(ix, iy, iz);
+			//myPosCk(ix, iy, iz);
 			for (int jz = iz - 1; jz <= iz + 1; jz++) {
 				for (int jy = iy - 1; jy <= iy + 1; jy++) {
 					for (int jx = ix - 1; jx <= ix + 1; jx++) {
@@ -660,7 +642,7 @@ void PrsGrdTrm() {
 			int ix = (int)((pos_ix - MIN_X)*DBinv) + 1;
 			int iy = (int)((pos_iy - MIN_Y)*DBinv) + 1;
 			int iz = (int)((pos_iz - MIN_Z)*DBinv) + 1;
-			myPosCk(ix, iy, iz);
+			//myPosCk(ix, iy, iz);
 			for (int jz = iz - 1; jz <= iz + 1; jz++) {
 				for (int jy = iy - 1; jy <= iy + 1; jy++) {
 					for (int jx = ix - 1; jx <= ix + 1; jx++) {
@@ -678,10 +660,10 @@ void PrsGrdTrm() {
 									double w = WEI(dist, r);
 									w *= (Prs[j] + Prs[i]) / dist2;
 									Acc_x += v0*w;	Acc_y += v1*w;	Acc_z += v2*w;
-									if (i == 45109 && TIM > 0.050) {
-										printf("%d,dist:%8.3e Prs:%8.3e w:%8.3e v0:%8.3e v1:%8.3e v2:%8.3e\n", j, dist, Prs[j], w, v0, v1, v2);
-										//printf("value %d:%8.3e, %8.3e, %8.3e\n", j, v0*w, v1*w, v2*w);
-									}
+									//if (i == 45109 && TIM > 0.050) {
+									//	printf("%d,dist:%8.3e Prs:%8.3e w:%8.3e v0:%8.3e v1:%8.3e v2:%8.3e\n", j, dist, Prs[j], w, v0, v1, v2);
+									//	//printf("value %d:%8.3e, %8.3e, %8.3e\n", j, v0*w, v1*w, v2*w);
+									//}
 								}
 							}
 							j = nxt[j];
@@ -745,7 +727,7 @@ void UpPcl2(void) {
 				printf("up2:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
 			}*/
 			ChkPcl(i);
-			myVelCk(i);
+			//myVelCk(i);
 			//if (i == i) { printf("update3:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]); }
 		}
 	}
@@ -978,91 +960,8 @@ void ckBuket(int i) {
 	}
 }
 
-void ClcEMPS(void) {
-	while (1) {
-		//if (iLP%OPT_FQC == 0) {
-		if (iLP%OPT_FQC == 0) {
-			int p_num = 0;
-			for (int i = 0; i < nP; i++) { if (Typ[i] != GHOST)p_num++; }
-			printf("%5d th TIM: %lf / p_num: %d\n", iLP, TIM, p_num);
-		}
-		//if (iLP%OPT_FQC == 0) {
-		if (iLP%OPT_FQC == 0) {
-			/*if (TIM != 0) { for (int i = 0; i < 10; i++) { partDens[11078 + i] = 100; ckBuket(11078 + i); } }
-			if (TIM != 0) { for (int i = 0; i < 5; i++) { partDens[0 + i] = 100;} }
-			if (TIM != 0) { for (int i = 0; i < 5; i++) { partDens[100 + i] = 100; ckBuket(100 + i); } }*/
-			WrtDat();
-			if (TIM >= FIN_TIM) { break; }
-		}
-		//printf("-----------------------------------------------------------------------------------");
-		//MoveSMWall();
-		int i = 45109;
-		//printf("update3:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		MkBkt();
-		printf("mkBkt:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		VscTrm();
-		printf("VscTrm:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		UpPcl1();
-		printf("update1:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		ChkCol();
-		printf("ChkCol:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		MkPrs();
-		printf("MkPrs1:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		PrsGrdTrm();
-		printf("PrsGrdTrm:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		//printf("after PrsGrd:%d, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2]);
-		UpPcl2();
-		printf("update2:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-		//printf("after Update:%d, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2]);
-		MkPrs();
-		printf("MkPrs2:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
-
-		//Rigid0();
-		/*printf("12306:%d, %8.3e, %8.3e, %8.3e ", Typ[12306], Pos[12306 * 3], Pos[12306 * 3 + 1], Pos[12306 * 3 + 2]);
-		if (Pos[12306 * 3 + 1] == -0.050000) {
-			printf("fuck");
-		}*/
-
-		for (int i = 0; i < nP; i++) { pav[i] += Prs[i]; }
-		iLP++;
-		TIM += DT;
-		//printf("===========================================================");
-		printf("%f \n", TIM);
-		//if (TIM > 0.0435) {
-		//	//printf("getin\n");
-		//}
-	}
-}
-
-void read_data(int iFile) {
-	sprintf_s(filename, "%s/output%05d.prof", IN_DIR_VTU, iFile);
-	fopen_s(&fp, filename, "r");
-	fscanf_s(fp, "%d", &NumberOfParticle);
-	printf("NumberOfParticle: %d\n", NumberOfParticle);
-
-	Position = (double*)malloc(sizeof(double)*NumberOfParticle * 3);
-	Velocity = (double*)malloc(sizeof(double)*NumberOfParticle * 3);
-	Pressure = (double*)malloc(sizeof(double)*NumberOfParticle);
-	pressave = (double*)malloc(sizeof(double)*NumberOfParticle);
-	ParticleType = (int*)malloc(sizeof(int)*NumberOfParticle);
-
-	for (int i = 0; i < NumberOfParticle; i++) {
-		int a[2];
-		double b[8];
-		double c[1];
-		fscanf_s(fp, " %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf", &a[0], &a[1], &b[0], &b[1], &b[2], &b[3], &b[4], &b[5], &b[6], &b[7], &c[0]);
-		ParticleType[i] = a[1];
-		Position[i * 3] = b[0];	Position[i * 3 + 1] = b[1];	Position[i * 3 + 2] = b[2];
-		Velocity[i * 3] = b[3];	Velocity[i * 3 + 1] = b[4];	Velocity[i * 3 + 2] = b[5];
-		Pressure[i] = b[6];
-		pressave[i] = b[7];
-		partDens[i] = c[0];
-	}
-	fclose(fp);
-}
-
-void mk_vtu(int iFile) {
-	sprintf_s(filename, "%s/particle_%05d.vtu", OUT_DIR_VTU, iFile);
+void mk_vtu() {
+	sprintf_s(filename, "%s/particle_%05d.vtu", OUT_DIR_VTU, iF);
 	printf("Creating %s ... ", filename);
 
 	FILE *fp;
@@ -1070,42 +969,50 @@ void mk_vtu(int iFile) {
 	fprintf(fp, "<?xml version='1.0' encoding='UTF-8'?>\n");
 	fprintf(fp, "<VTKFile xmlns='VTK' byte_order='LittleEndian' version='0.1' type='UnstructuredGrid'>\n");
 	fprintf(fp, "<UnstructuredGrid>\n");
-	fprintf(fp, "<Piece NumberOfCells='%d' NumberOfPoints='%d'>\n", NumberOfParticle, NumberOfParticle);
+	fprintf(fp, "<Piece NumberOfCells='%d' NumberOfPoints='%d'>\n", nP, nP);
 
 	fprintf(fp, "<Points>\n");
 	fprintf(fp, "<DataArray NumberOfComponents='3' type='Float32' Name='Position' format='ascii'>\n");
-	for (int i = 0; i < NumberOfParticle; i++)fprintf(fp, "%lf %lf %lf\n", Position[i * 3], Position[i * 3 + 1], Position[i * 3 + 2]);
+	for (int i = 0; i < nP; i++)fprintf(fp, "%lf %lf %lf\n", Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2]);
 	fprintf(fp, "</DataArray>\n");
 	fprintf(fp, "</Points>\n");
 
 	fprintf(fp, "<PointData>\n");
+
 	fprintf(fp, "<DataArray NumberOfComponents='1' type='Int32' Name='ParticleType' format='ascii'>\n");
-	for (int i = 0; i < NumberOfParticle; i++) { fprintf(fp, "%d\n", ParticleType[i]); }
+	for (int i = 0; i < nP; i++) { fprintf(fp, "%d\n", Typ[i]); }
 	fprintf(fp, "</DataArray>\n");
+
 	fprintf(fp, "<DataArray NumberOfComponents='1' type='Float32' Name='Velocity' format='ascii'>\n");
-	for (int i = 0; i < NumberOfParticle; i++) {
-		double val = sqrt(Velocity[i * 3] * Velocity[i * 3] + Velocity[i * 3 + 1] * Velocity[i * 3 + 1] + Velocity[i * 3 + 2] * Velocity[i * 3 + 2]);
+	for (int i = 0; i < nP; i++) {
+		double val = sqrt(Vel[i * 3] * Vel[i * 3] + Vel[i * 3 + 1] * Vel[i * 3 + 1] + Vel[i * 3 + 2] * Vel[i * 3 + 2]);
 		fprintf(fp, "%8.3e\n", (float)val);
 	}
 	fprintf(fp, "</DataArray>\n");
+
+	fprintf(fp, "<DataArray NumberOfComponents='1' type='Float32' Name='Pressure' format='ascii'>\n");
+	for (int i = 0; i < nP; i++) { fprintf(fp, "%8.3e\n", (float)Prs[i]); }
+	fprintf(fp, "</DataArray>\n");
+
 	fprintf(fp, "<DataArray NumberOfComponents='1' type='Float32' Name='pressave' format='ascii'>\n");
-	for (int i = 0; i < NumberOfParticle; i++) { fprintf(fp, "%8.3e\n", (float)pressave[i]); }
+	for (int i = 0; i < nP; i++) { fprintf(fp, "%8.3e\n", (float)pav[i]); }
 	fprintf(fp, "</DataArray>\n");
 
 	fprintf(fp, "<DataArray NumberOfComponents='1' type='Float32' Name='particleDens' format='ascii'>\n");
-	for (int i = 0; i < NumberOfParticle; i++) { fprintf(fp, "%lf\n", (float)partDens[i]); }
+	for (int i = 0; i < nP; i++) { fprintf(fp, "%lf\n", (float)partDens[i]); }
 	fprintf(fp, "</DataArray>\n");
+
 	fprintf(fp, "</PointData>\n");
 
 	fprintf(fp, "<Cells>\n");
 	fprintf(fp, "<DataArray type='Int32' Name='connectivity' format='ascii'>\n");
-	for (int i = 0; i < NumberOfParticle; i++)fprintf(fp, "%d\n", i);
+	for (int i = 0; i < nP; i++)fprintf(fp, "%d\n", i);
 	fprintf(fp, "</DataArray>\n");
 	fprintf(fp, "<DataArray type='Int32' Name='offsets' format='ascii'>\n");
-	for (int i = 0; i < NumberOfParticle; i++)fprintf(fp, "%d\n", i + 1);
+	for (int i = 0; i < nP; i++)fprintf(fp, "%d\n", i + 1);
 	fprintf(fp, "</DataArray>\n");
 	fprintf(fp, "<DataArray type='UInt8' Name='types' format='ascii'>\n");
-	for (int i = 0; i < NumberOfParticle; i++)fprintf(fp, "1\n");
+	for (int i = 0; i < nP; i++)fprintf(fp, "1\n");
 	fprintf(fp, "</DataArray>\n");
 	fprintf(fp, "</Cells>\n");
 
@@ -1117,27 +1024,84 @@ void mk_vtu(int iFile) {
 	printf("done.\n");
 }
 
-void setProfFileNum() {
 
-	ProfFileNumber = 0;
+void ClcForce() {
 
-	struct _finddata_t c_file;
-	long   hFile;
+	Prs_Series[iF] = 0;
 
-	// 最初のファイルを探索
-	sprintf_s(filename, "%s/output*.prof", IN_DIR_VTU);
-	if ((hFile = _findfirst(filename, &c_file)) == -1L)
-		printf("ファイルは存在しません。\n");
-	else {
-		ProfFileNumber++;	//printf("%s\n", c_file.name);
-
-							// 残りのファイルを探索
-		while (_findnext(hFile, &c_file) == 0) {
-			ProfFileNumber++;	//printf("%s\n", c_file.name);
+	for (int j = 0; j < nP; j++) {
+		//printf("hoge");
+		if (Typ[j] == FRONTWALL) {
+			Prs_Series[iF] += Prs[j] * PARTICLE_DISTANCE*PARTICLE_DISTANCE;
 		}
-		_findclose(hFile);
 	}
-	printf("%i", ProfFileNumber);
+}
+
+
+
+void ClcEMPS(void) {
+	while (1) {
+		//if (iLP%OPT_FQC == 0) {
+		if (iLP%OPT_FQC == 0) {
+			int p_num = 0;
+			for (int i = 0; i < nP; i++) { if (Typ[i] != GHOST)p_num++; }
+			printf("\n%5d th TIM: %lf / p_num: %d\n", iLP, TIM, p_num);
+		}
+		//if (iLP%OPT_FQC == 0) {
+		if (iLP%OPT_FQC == 0) {
+			/*if (TIM != 0) { for (int i = 0; i < 10; i++) { partDens[11078 + i] = 100; ckBuket(11078 + i); } }
+			if (TIM != 0) { for (int i = 0; i < 5; i++) { partDens[0 + i] = 100;} }
+			if (TIM != 0) { for (int i = 0; i < 5; i++) { partDens[100 + i] = 100; ckBuket(100 + i); } }*/
+			WrtDat();
+			mk_vtu();
+			ClcForce();
+			iF++;
+			sprintf_s(filename, "%s/for_disruption.txt", IN_DIR_VTU);
+			fopen_s(&fp, filename, "w");
+			fprintf(fp, "iLP, TIM, iF\n");
+			fprintf(fp, "%d, %d, %d\n", iLP, TIM, iF);
+			fclose(fp);
+			if (TIM >= FIN_TIM) { break; }
+		}
+		//printf("-----------------------------------------------------------------------------------");
+		MoveSMWall();
+		if (TIM != 0) { ChkCol(); }
+		//int i = 45109;
+		//printf("update3:%d, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+		MkBkt();
+		//printf("mkBkt:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+		VscTrm();
+		//printf("VscTrm:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+		UpPcl1();
+		//printf("update1:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+		ChkCol();
+		//printf("ChkCol:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+		MkPrs();
+		//printf("MkPrs1:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+		PrsGrdTrm();
+		//printf("PrsGrdTrm:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+		//printf("after PrsGrd:%d, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2]);
+		UpPcl2();
+		//printf("update2:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+		//printf("after Update:%d, %8.3e, %8.3e, %8.3e\n", Typ[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2]);
+		MkPrs();
+		//printf("MkPrs2:%8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e, %8.3e\n", Prs[i], Pos[i * 3], Pos[i * 3 + 1], Pos[i * 3 + 2], Vel[i * 3], Vel[i * 3 + 1], Vel[i * 3 + 2], Acc[i * 3], Acc[i * 3 + 1], Acc[i * 3 + 2]);
+
+		Rigid0();
+		/*printf("12306:%d, %8.3e, %8.3e, %8.3e ", Typ[12306], Pos[12306 * 3], Pos[12306 * 3 + 1], Pos[12306 * 3 + 2]);
+		if (Pos[12306 * 3 + 1] == -0.050000) {
+			printf("fuck");
+		}*/
+
+		for (int i = 0; i < nP; i++) { pav[i] += Prs[i]; }
+		iLP++;
+		TIM += DT;
+		//printf("===========================================================");
+		printf("%f ", TIM);
+		//if (TIM > 0.0435) {
+		//	//printf("getin\n");
+		//}
+	}
 }
 
 int main(int argc, char** argv) {
@@ -1180,22 +1144,17 @@ int main(int argc, char** argv) {
 	free(bfst);	free(blst);	free(nxt);
 	printf("end emps.\n");
 
-	// vtu
-	setProfFileNum();
-#pragma omp parallel for
-	for (int iFile = 0; iFile < ProfFileNumber; iFile++) {
+	printf("outout Series_Pressure\n");
 
-		read_data(iFile);
-		mk_vtu(iFile);
-
-		free(Position);
-		free(Velocity);
-		free(Pressure);
-		free(pressave);
-		free(ParticleType);
+	sprintf_s(filename, "%s/Series_Pressure.csv", IN_DIR_VTU);
+	fopen_s(&fp, filename, "w");
+	for (int iFile = 0; iFile < iF; iFile++) {
+		fprintf(fp, "%lf\n", Prs_Series[iFile]);
 	}
 
+	fclose(fp);
+
 	printf(" END. \n");
-	getchar();
+	//getchar();
 	return 0;
 }
